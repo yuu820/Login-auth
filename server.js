@@ -1,4 +1,5 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { randomUUID } = require('crypto');
@@ -6,10 +7,31 @@ const { getDb } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'development-secret-change-me';
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  (process.env.NODE_ENV === 'production' ? null : 'development-secret-change-me');
 const PASSWORD_SALT_ROUNDS = 10;
 
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required in production.');
+}
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 app.use(express.json());
+app.use('/api', apiLimiter);
 
 function sanitizeUser(user) {
   if (!user) {
@@ -27,7 +49,7 @@ async function authenticateToken(req, res, next) {
     return res.status(401).json({ message: 'アクセストークンが必要です。' });
   }
 
-  const token = authorization.slice('Bearer '.length);
+  const token = authorization.substring('Bearer '.length);
 
   try {
     const payload = jwt.verify(token, JWT_SECRET);
@@ -64,7 +86,7 @@ function isAdmin(req, res, next) {
   return next();
 }
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', authLimiter, async (req, res) => {
   const { username, password } = req.body ?? {};
 
   if (!username || !password) {
@@ -73,7 +95,10 @@ app.post('/api/auth/login', async (req, res) => {
 
   try {
     const db = await getDb();
-    const existingUser = await db.get('SELECT * FROM users WHERE username = ?', username);
+    const existingUser = await db.get(
+      'SELECT id, username, password, role, status FROM users WHERE username = ?',
+      username
+    );
 
     if (!existingUser) {
       const hashedPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS);

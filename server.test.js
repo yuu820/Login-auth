@@ -72,6 +72,17 @@ test('registers a new user and blocks login while pending', async () => {
   assert.equal(response.status, 201);
   assert.match(response.body.message, /新規登録/);
 
+  const db = await getDb();
+  const user = await db.get(
+    'SELECT username, role, status FROM users WHERE username = ?',
+    'alice'
+  );
+  assert.deepEqual(user, {
+    username: 'alice',
+    role: 'user',
+    status: 'pending',
+  });
+
   response = await request('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify({ username: 'alice', password: 'password123' }),
@@ -143,4 +154,30 @@ test('allows an admin to approve and suspend users', async () => {
   response = await request('/api/user/me', { headers: userHeaders });
   assert.equal(response.status, 403);
   assert.match(response.body.message, /一時停止/);
+});
+
+test('returns 404 when approving a missing user', async () => {
+  const db = await getDb();
+  const passwordHash = await bcrypt.hash('adminpass', 10);
+
+  await db.run(
+    "INSERT INTO users (id, username, password, role, status) VALUES (?, ?, ?, 'admin', 'active')",
+    'admin-id',
+    'admin',
+    passwordHash
+  );
+
+  let response = await request('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username: 'admin', password: 'adminpass' }),
+  });
+  assert.equal(response.status, 200);
+
+  response = await request('/api/admin/users/missing-user/approve', {
+    method: 'PATCH',
+    headers: { Authorization: 'Bearer ' + response.body.token },
+  });
+
+  assert.equal(response.status, 404);
+  assert.match(response.body.message, /見つかりません/);
 });
