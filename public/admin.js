@@ -54,41 +54,79 @@ async function ensureAdmin() {
 
 function actionButtons(user) {
   if (user.role === 'admin') {
-    return '<span class="muted">管理者は操作不可</span>';
+    const mutedText = document.createElement('span');
+    mutedText.className = 'muted';
+    mutedText.textContent = '管理者は操作不可';
+    return mutedText;
   }
 
-  const buttons = [];
+  const container = document.createElement('div');
+  container.className = 'row-actions';
 
   if (user.status !== 'active') {
-    buttons.push(`<button data-action="approve" data-id="${user.id}" type="button">承認</button>`);
+    const approveButton = document.createElement('button');
+    approveButton.type = 'button';
+    approveButton.dataset.action = 'approve';
+    approveButton.dataset.id = user.id;
+    approveButton.textContent = '承認';
+    container.appendChild(approveButton);
   }
 
   if (user.status !== 'suspended') {
-    buttons.push(`<button data-action="suspend" data-id="${user.id}" type="button">停止</button>`);
+    const suspendButton = document.createElement('button');
+    suspendButton.type = 'button';
+    suspendButton.dataset.action = 'suspend';
+    suspendButton.dataset.id = user.id;
+    suspendButton.textContent = '停止';
+    container.appendChild(suspendButton);
   }
 
-  buttons.push(`<button data-action="delete" data-id="${user.id}" type="button">削除</button>`);
-  return `<div class="row-actions">${buttons.join('')}</div>`;
+  const deleteButton = document.createElement('button');
+  deleteButton.type = 'button';
+  deleteButton.dataset.action = 'delete';
+  deleteButton.dataset.id = user.id;
+  deleteButton.textContent = '削除';
+  container.appendChild(deleteButton);
+
+  return container;
 }
 
 function renderUsers(users) {
   if (!users.length) {
-    usersBody.innerHTML = '<tr><td colspan="4" class="muted">ユーザーが存在しません。</td></tr>';
+    usersBody.replaceChildren();
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 4;
+    td.className = 'muted';
+    td.textContent = 'ユーザーが存在しません。';
+    tr.appendChild(td);
+    usersBody.appendChild(tr);
     return;
   }
 
-  usersBody.innerHTML = users
-    .map(
-      (user) => `
-        <tr>
-          <td>${user.username}</td>
-          <td>${user.role}</td>
-          <td>${user.status}</td>
-          <td>${actionButtons(user)}</td>
-        </tr>
-      `
-    )
-    .join('');
+  const rows = users.map((user) => {
+    const tr = document.createElement('tr');
+
+    const usernameTd = document.createElement('td');
+    usernameTd.textContent = user.username;
+    tr.appendChild(usernameTd);
+
+    const roleTd = document.createElement('td');
+    roleTd.textContent = user.role;
+    tr.appendChild(roleTd);
+
+    const statusTd = document.createElement('td');
+    statusTd.textContent = user.status;
+    tr.appendChild(statusTd);
+
+    const actionTd = document.createElement('td');
+    actionTd.appendChild(actionButtons(user));
+    tr.appendChild(actionTd);
+
+    return tr;
+  });
+
+  usersBody.replaceChildren(...rows);
 }
 
 async function loadUsers() {
@@ -118,12 +156,13 @@ async function handleAction(action, userId) {
     return;
   }
 
-  const endpoint =
-    action === 'approve'
-      ? `/api/admin/users/${userId}/approve`
-      : action === 'suspend'
-        ? `/api/admin/users/${userId}/suspend`
-        : `/api/admin/users/${userId}`;
+  let endpoint = `/api/admin/users/${userId}`;
+
+  if (action === 'approve') {
+    endpoint = `/api/admin/users/${userId}/approve`;
+  } else if (action === 'suspend') {
+    endpoint = `/api/admin/users/${userId}/suspend`;
+  }
 
   const method = action === 'delete' ? 'DELETE' : 'PATCH';
 
