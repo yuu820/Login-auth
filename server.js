@@ -3,6 +3,7 @@ const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { randomUUID } = require('crypto');
+const path = require('path');
 const { getDb } = require('./database');
 
 const app = express();
@@ -31,6 +32,7 @@ const authLimiter = rateLimit({
 });
 
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api', apiLimiter);
 
 function sanitizeUser(user) {
