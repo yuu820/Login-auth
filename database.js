@@ -1,10 +1,43 @@
 const path = require('path');
+const { randomUUID } = require('crypto');
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
+const bcrypt = require('bcrypt');
 
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'auth.db');
+const DEFAULT_ADMIN_USERNAME = process.env.DEFAULT_ADMIN_USERNAME || 'admin';
+const DEFAULT_ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD;
+const PASSWORD_SALT_ROUNDS = 10;
 
 let dbPromise;
+
+async function ensureDefaultAdmin(db) {
+  const adminUser = await db.get('SELECT id FROM users WHERE role = ?', 'admin');
+
+  if (adminUser) {
+    return;
+  }
+
+  if (!DEFAULT_ADMIN_PASSWORD) {
+    throw new Error('DEFAULT_ADMIN_PASSWORD environment variable is required.');
+  }
+
+  const passwordHash = await bcrypt.hash(DEFAULT_ADMIN_PASSWORD, PASSWORD_SALT_ROUNDS);
+  let bootstrapUsername = DEFAULT_ADMIN_USERNAME;
+  let suffix = 1;
+
+  while (await db.get('SELECT id FROM users WHERE username = ?', bootstrapUsername)) {
+    bootstrapUsername = `${DEFAULT_ADMIN_USERNAME}-bootstrap-${suffix}`;
+    suffix += 1;
+  }
+
+  await db.run(
+    "INSERT INTO users (id, username, password, role, status) VALUES (?, ?, ?, 'admin', 'active')",
+    randomUUID(),
+    bootstrapUsername,
+    passwordHash
+  );
+}
 
 async function initDatabase() {
   const db = await open({
@@ -22,6 +55,8 @@ async function initDatabase() {
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  await ensureDefaultAdmin(db);
 
   return db;
 }
@@ -46,5 +81,6 @@ async function closeDb() {
 
 module.exports = {
   closeDb,
+  ensureDefaultAdmin,
   getDb,
 };
