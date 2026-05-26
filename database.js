@@ -34,6 +34,17 @@ function getDb() {
   return dbPromise;
 }
 
+async function closeDb() {
+  if (!dbPromise) {
+    return;
+  }
+
+  const db = await dbPromise;
+  dbPromise = null;
+  await db.close();
+}
+
 module.exports = {
+  closeDb,
   getDb,
 };
