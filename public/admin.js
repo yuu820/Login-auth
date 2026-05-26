@@ -64,31 +64,25 @@ function actionButtons(user) {
   container.className = 'row-actions';
 
   if (user.status !== 'active') {
-    const approveButton = document.createElement('button');
-    approveButton.type = 'button';
-    approveButton.dataset.action = 'approve';
-    approveButton.dataset.id = user.id;
-    approveButton.textContent = '承認';
-    container.appendChild(approveButton);
+    container.appendChild(createActionButton('approve', user.id, '承認'));
   }
 
   if (user.status !== 'suspended') {
-    const suspendButton = document.createElement('button');
-    suspendButton.type = 'button';
-    suspendButton.dataset.action = 'suspend';
-    suspendButton.dataset.id = user.id;
-    suspendButton.textContent = '停止';
-    container.appendChild(suspendButton);
+    container.appendChild(createActionButton('suspend', user.id, '停止'));
   }
 
-  const deleteButton = document.createElement('button');
-  deleteButton.type = 'button';
-  deleteButton.dataset.action = 'delete';
-  deleteButton.dataset.id = user.id;
-  deleteButton.textContent = '削除';
-  container.appendChild(deleteButton);
+  container.appendChild(createActionButton('delete', user.id, '削除'));
 
   return container;
+}
+
+function createActionButton(action, userId, label) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.dataset.action = action;
+  button.dataset.id = userId;
+  button.textContent = label;
+  return button;
 }
 
 function renderUsers(users) {
