@@ -198,13 +198,13 @@ usersBody.addEventListener('click', async (event) => {
 refreshButton.addEventListener('click', () => {
   loadUsers().catch((error) => {
     console.error(error);
-    setMessage('ユーザー一覧の取得に失敗しました。');
+    setMessage('通信エラーが発生しました。');
   });
 });
 
 logoutButton.addEventListener('click', () => {
   clearToken();
-  setMessage('ログアウトしました。');
+  window.location.href = '/';
 });
 
 (async () => {
