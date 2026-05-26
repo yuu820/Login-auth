@@ -6,6 +6,7 @@ const profileUsername = document.getElementById('profile-username');
 const profileRole = document.getElementById('profile-role');
 const profileStatus = document.getElementById('profile-status');
 const logoutButton = document.getElementById('logout-button');
+const adminLinkWrapper = document.getElementById('admin-link-wrapper');
 const tokenStorageKey = 'login-auth-token';
 
 function setMessage(message) {
@@ -15,6 +16,7 @@ function setMessage(message) {
 function setProfile(user) {
   if (!user) {
     profileSection.classList.add('hidden');
+    adminLinkWrapper.classList.add('hidden');
     profileId.textContent = '';
     profileUsername.textContent = '';
     profileRole.textContent = '';
@@ -23,6 +25,7 @@ function setProfile(user) {
   }
 
   profileSection.classList.remove('hidden');
+  adminLinkWrapper.classList.toggle('hidden', user.role !== 'admin');
   profileId.textContent = user.id;
   profileUsername.textContent = user.username;
   profileRole.textContent = user.role;

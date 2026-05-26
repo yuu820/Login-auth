@@ -60,6 +60,19 @@ button:hover {
   background: #1d4ed8;
 }
 
+.button-link {
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  text-decoration: none;
+}
+
+.button-link:hover {
+  background: #1d4ed8;
+}
+
 .message {
   min-height: 1.25em;
   margin-top: 12px;
@@ -81,4 +94,41 @@ dd {
 
 .hidden {
   display: none;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: top;
+}
+
+.row-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.row-actions button {
+  margin-top: 0;
+}
+
+.muted {
+  color: #6b7280;
 }
