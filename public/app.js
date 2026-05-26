@@ -58,7 +58,7 @@ async function fetchMyProfile() {
 
   const { response, body } = await fetchJson('/api/user/me', {
     headers: {
-      Authorization: ['Bearer', token].join(' '),
+      Authorization: 'Bearer ' + token,
     },
   });
 
@@ -100,7 +100,8 @@ loginForm.addEventListener('submit', async (event) => {
 
     clearToken();
     setProfile(null);
-  } catch (_error) {
+  } catch (error) {
+    console.error(error);
     setMessage('通信エラーが発生しました。');
     clearToken();
     setProfile(null);
@@ -113,7 +114,8 @@ logoutButton.addEventListener('click', () => {
   setMessage('ログアウトしました。');
 });
 
-fetchMyProfile().catch(() => {
+fetchMyProfile().catch((error) => {
+  console.error(error);
   setMessage('ユーザー情報の取得に失敗しました。');
   clearToken();
   setProfile(null);
