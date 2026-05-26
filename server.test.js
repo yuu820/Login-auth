@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 
 process.env.DB_PATH = path.join(os.tmpdir(), 'login-auth-test.db');
 process.env.JWT_SECRET = 'test-secret';
+process.env.DEFAULT_ADMIN_PASSWORD = 'adminpass';
 
 const { app } = require('./server');
 const { closeDb, getDb } = require('./database');
