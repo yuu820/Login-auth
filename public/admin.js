@@ -140,7 +140,7 @@ async function loadUsers() {
 
   if (!response.ok) {
     setMessage(body?.message || 'ユーザー一覧の取得に失敗しました。');
-    usersBody.innerHTML = '';
+    usersBody.replaceChildren();
     return;
   }
 
@@ -212,7 +212,7 @@ logoutButton.addEventListener('click', () => {
     const admin = await ensureAdmin();
 
     if (!admin) {
-      usersBody.innerHTML = '';
+      usersBody.replaceChildren();
       return;
     }
 
