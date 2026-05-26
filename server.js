@@ -12,6 +12,31 @@ const JWT_SECRET =
   process.env.JWT_SECRET ||
   (process.env.NODE_ENV === 'production' ? null : 'development-secret-change-me');
 const PASSWORD_SALT_ROUNDS = 10;
+const TRUST_PROXY_ENV = process.env.TRUST_PROXY;
+
+function resolveTrustProxySetting(value) {
+  if (value == null || value.trim() === '') {
+    return process.env.NODE_ENV === 'production' ? 1 : false;
+  }
+
+  const normalizedValue = value.trim().toLowerCase();
+
+  if (normalizedValue === 'true') {
+    return 1;
+  }
+
+  if (normalizedValue === 'false') {
+    return false;
+  }
+
+  if (/^\d+$/.test(normalizedValue)) {
+    return Number(normalizedValue);
+  }
+
+  return value;
+}
+
+app.set('trust proxy', resolveTrustProxySetting(TRUST_PROXY_ENV));
 
 if (!JWT_SECRET) {
   throw new Error('JWT_SECRET environment variable is required in production.');
