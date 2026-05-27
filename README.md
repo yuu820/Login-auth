@@ -17,7 +17,7 @@ Express + SQLite のログインAPIと、APIを利用するシンプルなフロ
 - `DEFAULT_ADMIN_USERNAME` / `DEFAULT_ADMIN_PASSWORD` 環境変数で初期管理者のID・パスワードを変更できます。
 - すでに同名ユーザーがいる場合は `admin-bootstrap-1` のような別IDで作成されます。
 - `DEFAULT_ADMIN_PASSWORD` の設定は必須です（本番・開発共通）。
-- `TRUST_PROXY` を設定すると `app.set('trust proxy', ...)` を上書きできます（例: `1`, `true`, `false`, `loopback`）。未設定時は本番環境で `1`、開発環境で `false` です。
+- `TRUST_PROXY` を設定すると `app.set('trust proxy', ...)` を上書きできます（例: `1`, `true`, `false`, `loopback`）。未設定時は常に `1` です。
 
 ## テスト
 
