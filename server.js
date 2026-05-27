@@ -16,7 +16,7 @@ const TRUST_PROXY_ENV = process.env.TRUST_PROXY;
 
 function resolveTrustProxySetting(value) {
   if (value == null || value.trim() === '') {
-    return process.env.NODE_ENV === 'production' ? 1 : false;
+    return 1;
   }
 
   const normalizedValue = value.trim().toLowerCase();
