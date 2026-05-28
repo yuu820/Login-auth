@@ -11,6 +11,13 @@ const PASSWORD_SALT_ROUNDS = 10;
 
 let dbPromise;
 
+class AppConfigError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'AppConfigError';
+  }
+}
+
 async function ensureDefaultAdmin(db) {
   const adminUser = await db.get('SELECT id FROM users WHERE role = ?', 'admin');
 
@@ -19,7 +26,7 @@ async function ensureDefaultAdmin(db) {
   }
 
   if (!DEFAULT_ADMIN_PASSWORD) {
-    throw new Error('DEFAULT_ADMIN_PASSWORD environment variable is required.');
+    throw new AppConfigError('DEFAULT_ADMIN_PASSWORD environment variable is required.');
   }
 
   const passwordHash = await bcrypt.hash(DEFAULT_ADMIN_PASSWORD, PASSWORD_SALT_ROUNDS);
@@ -80,6 +87,7 @@ async function closeDb() {
 }
 
 module.exports = {
+  AppConfigError,
   closeDb,
   ensureDefaultAdmin,
   getDb,

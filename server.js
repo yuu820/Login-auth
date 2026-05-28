@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { randomUUID } = require('crypto');
 const path = require('path');
-const { getDb } = require('./database');
+const { AppConfigError, getDb } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -69,6 +69,16 @@ function sanitizeUser(user) {
   return safeUser;
 }
 
+function handleDatabaseError(res, error) {
+  if (error instanceof AppConfigError) {
+    return res.status(503).json({
+      message: 'サーバー設定エラーです。DEFAULT_ADMIN_PASSWORD を設定してください。',
+    });
+  }
+
+  return res.status(500).json({ message: 'サーバーエラーが発生しました。' });
+}
+
 async function authenticateToken(req, res, next) {
   const authorization = req.headers.authorization;
 
@@ -78,8 +88,14 @@ async function authenticateToken(req, res, next) {
 
   const token = authorization.substring('Bearer '.length);
 
+  let payload;
   try {
-    const payload = jwt.verify(token, JWT_SECRET);
+    payload = jwt.verify(token, JWT_SECRET);
+  } catch (error) {
+    return res.status(403).json({ message: 'トークンが無効です。' });
+  }
+
+  try {
     const db = await getDb();
     const user = await db.get(
       'SELECT id, username, role, status, created_at FROM users WHERE id = ?',
@@ -101,7 +117,7 @@ async function authenticateToken(req, res, next) {
     req.user = user;
     return next();
   } catch (error) {
-    return res.status(403).json({ message: 'トークンが無効です。' });
+    return handleDatabaseError(res, error);
   }
 }
 
@@ -170,7 +186,7 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
       token,
     });
   } catch (error) {
-    return res.status(500).json({ message: 'サーバーエラーが発生しました。' });
+    return handleDatabaseError(res, error);
   }
 });
 
@@ -188,7 +204,7 @@ app.get('/api/user/me', authenticateToken, async (req, res) => {
 
     return res.status(200).json(sanitizeUser(user));
   } catch (error) {
-    return res.status(500).json({ message: 'サーバーエラーが発生しました。' });
+    return handleDatabaseError(res, error);
   }
 });
 
@@ -205,7 +221,7 @@ adminRouter.get('/users', async (_req, res) => {
 
     return res.status(200).json(users.map(sanitizeUser));
   } catch (error) {
-    return res.status(500).json({ message: 'サーバーエラーが発生しました。' });
+    return handleDatabaseError(res, error);
   }
 });
 
@@ -228,7 +244,7 @@ adminRouter.patch('/users/:id/approve', async (req, res) => {
       user: sanitizeUser(user),
     });
   } catch (error) {
-    return res.status(500).json({ message: 'サーバーエラーが発生しました。' });
+    return handleDatabaseError(res, error);
   }
 });
 
@@ -255,7 +271,7 @@ adminRouter.patch('/users/:id/suspend', async (req, res) => {
       user: sanitizeUser(user),
     });
   } catch (error) {
-    return res.status(500).json({ message: 'サーバーエラーが発生しました。' });
+    return handleDatabaseError(res, error);
   }
 });
 
@@ -270,7 +286,7 @@ adminRouter.delete('/users/:id', async (req, res) => {
 
     return res.status(200).json({ message: 'ユーザーを削除しました。' });
   } catch (error) {
-    return res.status(500).json({ message: 'サーバーエラーが発生しました。' });
+    return handleDatabaseError(res, error);
   }
 });
 
